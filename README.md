@@ -35,7 +35,7 @@ A full-stack, real-time quiz game application built with a Spring Boot backend a
 
 2.  **Clone the repository:**
     ```bash
-    git clone <your-repo-url>
+    git clone https://github.com/Snehil25/quiz-duel-backend
     cd quiz-duel-backend
     ```
 
