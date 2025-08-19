@@ -1,4 +1,5 @@
 package com.example.service;
+
 import com.example.dto.GameSummaryDto;
 import com.example.dto.PlayerScoreDto;
 import com.example.model.*;
@@ -8,7 +9,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional; // <-- IMPORT THIS
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -49,6 +52,7 @@ public class GameService {
         return savedGame;
     }
 
+    @Transactional
     public Game joinGame(String inviteCode, User user) {
         Game game = gameRepository.findByInviteCode(inviteCode)
                 .orElseThrow(() -> new RuntimeException("Game not found with code: " + inviteCode));
@@ -83,7 +87,12 @@ public class GameService {
             game.setQuestions(questions);
             game.setStatus(GameStatus.ACTIVE);
             
-            messagingTemplate.convertAndSend("/topic/game/" + game.getId(), "Game has started!");
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    messagingTemplate.convertAndSend("/topic/game/" + game.getId(), "Game has started!");
+                }
+            });
         } else {
              messagingTemplate.convertAndSend("/topic/game/" + game.getId(), "A player has joined the game!");
         }
@@ -93,7 +102,7 @@ public class GameService {
 
     public Question getQuestionByIndex(Long gameId, int index) {
         Game game = gameRepository.findById(gameId).orElseThrow(() -> new RuntimeException("Game not found"));
-        if (index < 0 || index >= game.getQuestions().size()) {
+        if (game.getQuestions() == null || index < 0 || index >= game.getQuestions().size()) {
             throw new RuntimeException("Invalid question index: " + index);
         }
         return game.getQuestions().get(index);
