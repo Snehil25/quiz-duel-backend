@@ -8,11 +8,9 @@ import java.util.List;
 
 public interface QuestionRepository extends JpaRepository<Question, Long> {
     
-    // Updated to find 10 random questions
-    @Query(value = "SELECT * FROM question ORDER BY RAND() LIMIT 10", nativeQuery = true)
+    @Query(value = "SELECT * FROM question ORDER BY RANDOM() LIMIT 10", nativeQuery = true)
     List<Question> findRandomQuestions();
 
-    // NEW: Find 10 random questions from a specific list of categories
-    @Query(value = "SELECT * FROM question WHERE category IN :categories ORDER BY RAND() LIMIT 10", nativeQuery = true)
+    @Query(value = "SELECT * FROM question WHERE category IN :categories ORDER BY RANDOM() LIMIT 10", nativeQuery = true)
     List<Question> findRandomQuestionsByCategories(@Param("categories") List<String> categories);
 }
