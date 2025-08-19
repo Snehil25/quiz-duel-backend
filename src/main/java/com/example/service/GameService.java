@@ -87,14 +87,18 @@ public class GameService {
             game.setQuestions(questions);
             game.setStatus(GameStatus.ACTIVE);
             
+            // --- THIS IS THE FIX ---
+            // We must explicitly save the game object to persist the new questions and status.
+            gameRepository.save(game);
+            
             TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
                 @Override
                 public void afterCommit() {
-                    messagingTemplate.convertAndSend("/topic/game/" + game.getId(), "Game has started!");
+                    messagingTemplate.convertAndSend("/topic/game/"  + game.getId(), "Game has started!");
                 }
             });
         } else {
-             messagingTemplate.convertAndSend("/topic/game/" + game.getId(), "A player has joined the game!");
+             messagingTemplate.convertAndSend("/topic/game/"  + game.getId(), "A player has joined the game!");
         }
 
         return game;
